@@ -1,10 +1,10 @@
 package com.urbanites.clients.flickr
 
-import org.scalatest._
+import org.junit.runner.RunWith
+import org.specs2.runner.JUnitRunner
 
-/**
-  * Created by assen on 21/11/15.
-  */
+
+@RunWith(classOf[JUnitRunner])
 class FlickrClientTest {
-  
+
 }
