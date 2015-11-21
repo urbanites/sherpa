@@ -8,7 +8,12 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.11",
   "com.typesafe.akka" %% "akka-testkit" % "2.3.11" % "test",
   "com.typesafe.akka" %% "akka-http-experimental" % "2.0-M1",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test")
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+
+  "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
+  "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
+
+)
 
 
 fork in run := true
