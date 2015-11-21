@@ -1,0 +1,10 @@
+Sherpa
+======
+
+Running 
+-------
+
+
+
+    ./activator ui
+
