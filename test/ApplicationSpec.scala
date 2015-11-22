@@ -37,7 +37,7 @@ class ApplicationSpec extends Specification {
       contentType(poi) must beSome.which(_ == "application/json")
 
       val json = Json.parse(contentAsString(poi)).as[JsArray]
-      (json(0) \ "description").as[String] must equalTo("2012-11-05 Rotterdam - Carnisse 3Hoek - 20")
+      (json(0) \ "description").as[String] must startWith("2012-11-05 Rotterdam - Carnisse 3Hoek")
     }
 
     "require coordinates " in new WithApplication {
@@ -45,7 +45,6 @@ class ApplicationSpec extends Specification {
 
       status(poi) must equalTo(BAD_REQUEST)
     }
-
   }
 }
 

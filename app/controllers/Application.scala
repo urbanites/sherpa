@@ -21,7 +21,7 @@ class Application extends Controller {
     def photoUrl(size: String = "m"): String = s"http://farm$farm.staticflickr.com/$server/${photoId}_${secret}_$size.jpg"
   }
 
-  implicit val locationReads: Reads[FlickrPhoto] = (
+  implicit val flickrReads: Reads[FlickrPhoto] = (
       (JsPath \ "id").read[String] and
       (JsPath \ "title").read[String] and
       (JsPath \ "secret").read[String] and
@@ -50,7 +50,6 @@ class Application extends Controller {
     Logger.debug(s"flickr url: $flickrUrl")
     WS.url(flickrUrl).get().map { response =>
       Logger.debug(s"response: ${response.json}")
-
       val flickrJsonPhotos = (response.json \ "photos" \ "photo").as[JsArray].value
       Logger.debug("flickr json: " + flickrJsonPhotos)
       val flickrPhotos = flickrJsonPhotos.map(flickrJsonPhoto => flickrJsonPhoto.as[FlickrPhoto])
@@ -58,5 +57,4 @@ class Application extends Controller {
       Ok(JsArray(ownPhotos))
     }
   }
-
 }
