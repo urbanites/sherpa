@@ -6,7 +6,7 @@ import org.junit.runner._
 import play.api.test._
 import play.api.test.Helpers._
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, Json}
 
 /**
  * Add your spec here.
@@ -36,8 +36,8 @@ class ApplicationSpec extends Specification {
       status(poi) must equalTo(OK)
       contentType(poi) must beSome.which(_ == "application/json")
 
-      val json = Json.parse(contentAsString(poi))
-      (json \ "description").as[String] must equalTo("Maastunnel")
+      val json = Json.parse(contentAsString(poi)).as[JsArray]
+      (json(0) \ "description").as[String] must equalTo("Maastunnel")
     }
 
     "require coordinates " in new WithApplication {
