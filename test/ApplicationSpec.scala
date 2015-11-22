@@ -1,9 +1,12 @@
+import org.specs2.matcher
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
 
 import play.api.test._
 import play.api.test.Helpers._
+
+import play.api.libs.json.Json
 
 /**
  * Add your spec here.
@@ -26,5 +29,23 @@ class ApplicationSpec extends Specification {
       contentType(home) must beSome.which(_ == "text/html")
       contentAsString(home) must contain ("Hello world")
     }
+
+    "send a poi json " in new WithApplication {
+      val poi = route(FakeRequest(GET, "/poi?lat1=51.8&long1=4.4&lat2=51.9&long2=4.5")).get
+
+      status(poi) must equalTo(OK)
+      contentType(poi) must beSome.which(_ == "application/json")
+
+      val json = Json.parse(contentAsString(poi))
+      (json \ "description").as[String] must equalTo("Maastunnel")
+    }
+
+    "require coordinates " in new WithApplication {
+      val poi = route(FakeRequest(GET, "/poi")).get
+
+      status(poi) must equalTo(BAD_REQUEST)
+    }
+
   }
 }
+
