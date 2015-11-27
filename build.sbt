@@ -10,18 +10,13 @@ libraryDependencies ++= Seq(
   jdbc,
   cache,
   ws,
-  "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
-
   specs2 % Test
 )
 
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.com/typesafe/ivy-releases"))(Resolver.ivyStylePatterns)
 
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.
 routesGenerator := InjectedRoutesGenerator
-
-unmanagedSourceDirectories in Compile += baseDirectory.value / "src/main/scala"
-
 
 fork in run := false
