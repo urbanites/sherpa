@@ -1,6 +1,9 @@
 FROM java:8
 
-RUN bash -c 'unzip target/universal/sherpa-1.0-SNAPSHOT.zip -d sherpa-dist'
-ADD sherpa
+ADD target/universal/sherpa-1.0-SNAPSHOT.zip /tmp/sherpa.zip
 
-ENTRYPOINT ["sherpa/bin/sherpa"]
+RUN  mkdir /sherpa
+RUN  unzip /tmp/sherpa.zip -d /sherpa
+RUN  ls -al /sherpa
+
+ENTRYPOINT ["/sherpa/bin/sherpa"]
