@@ -6,4 +6,6 @@ RUN  mkdir /sherpa
 RUN  unzip /tmp/sherpa.zip -d /sherpa
 RUN  ls -al /sherpa
 
+EXPOSE 9000
+
 ENTRYPOINT ["/sherpa/bin/sherpa"]
