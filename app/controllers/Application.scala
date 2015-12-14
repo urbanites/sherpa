@@ -14,10 +14,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class Application extends Controller {
 
   val apiKey = Play.current.configuration.getString("flickr.apiKey").get
-  val flickrPhotoInfoUrl = s"https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=$apiKey&bbox=%s,%s,%s,%s&extras=geo&sort=interestingness-desc&format=json&nojsoncallback=1&page=1&per_page=500"
+  val flickrPhotoInfoUrl = s"https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=$apiKey" +
+    s"&bbox=%s,%s,%s,%s" +
+    s"&safe_search=1&extras=geo&sort=interestingness-desc&format=json&nojsoncallback=1&page=1&per_page=5"
 
   case class FlickrPhoto(photoId: String, title: String, secret: String, farm: Int, server: String, latitude: Double, longitude: Double) {
-    def photoUrl(size: String = "m"): String = s"http://farm$farm.staticflickr.com/$server/${photoId}_${secret}_$size.jpg"
+    def photoUrl(size: String = "m"): String =
+      s"http://farm$farm.staticflickr.com/$server/${photoId}_${secret}_$size.jpg"
   }
 
   implicit val flickrReads: Reads[FlickrPhoto] = (
@@ -44,8 +47,11 @@ class Application extends Controller {
     Ok(views.html.index("Your new application is ready."))
   }
 
-  def poiService(lat1: Double, long1: Double, lat2: Double, long2: Double) = Action.async {
-    val flickrUrl = flickrPhotoInfoUrl format(lat1, long1, lat2, long2)
+  def poiService(lat1: Double, long1: Double, lat2: Double, long2: Double, dateMin: String, dateMax: String) = Action.async {
+    var flickrUrl = flickrPhotoInfoUrl format(lat1, long1, lat2, long2)
+    if (dateMin != null && dateMin.length > 0 && dateMax != null && dateMax.length > 0) {
+      flickrUrl = flickrUrl + s"&min_taken_date=%s&max_taken_date=%s".format(dateMin, dateMax);
+    }
     Logger.debug(s"flickr url: $flickrUrl")
     WS.url(flickrUrl).get().map { response =>
       Logger.debug(s"response: ${response.json}")
