@@ -15,15 +15,20 @@ class Application extends Controller {
 
   val apiKey = Play.current.configuration.getString("flickr.apiKey").get
   val flickrPhotoInfoUrl = s"https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=$apiKey" +
-    s"&bbox=%s,%s,%s,%s" +
+    s"&lat=%s&lon=%s&radius=%s" +
     s"&safe_search=1&extras=geo&sort=interestingness-desc&format=json&nojsoncallback=1&page=1&per_page=5"
 
-  case class FlickrPhoto(photoId: String, title: String, secret: String, farm: Int, server: String, latitude: Double, longitude: Double) {
+  case class FlickrPhoto(ownerId: String, photoId: String, title: String, secret: String, farm: Int, server: String,
+                         latitude: Double, longitude: Double) {
     def photoUrl(size: String = "m"): String =
       s"http://farm$farm.staticflickr.com/$server/${photoId}_${secret}_$size.jpg"
+
+    def pageUrl(): String =
+      s"https://www.flickr.com/photos/${ownerId}/${photoId}"
   }
 
   implicit val flickrReads: Reads[FlickrPhoto] = (
+      (JsPath \ "owner").read[String] and
       (JsPath \ "id").read[String] and
       (JsPath \ "title").read[String] and
       (JsPath \ "secret").read[String] and
@@ -31,12 +36,13 @@ class Application extends Controller {
       (JsPath \ "server").read[String] and
       (JsPath \ "latitude").read[String].map(_.toDouble) and
       (JsPath \ "longitude").read[String].map(_.toDouble)
-    )(FlickrPhoto.apply(_, _, _, _, _, _, _))
+    )(FlickrPhoto.apply(_,_, _, _, _, _, _, _))
 
 
   implicit val poiWrites = new Writes[PointOfInterest] {
     def writes(poi: PointOfInterest) = Json.obj(
-      "uri" -> poi.uri,
+      "photo_thumb" -> poi.thumb,
+      "photo_page" -> poi.page,
       "lat" -> poi.lat,
       "long" -> poi.lon,
       "description" -> poi.description
@@ -47,10 +53,10 @@ class Application extends Controller {
     Ok(views.html.index("Your new application is ready."))
   }
 
-  def poiService(lat1: Double, long1: Double, lat2: Double, long2: Double, dateMin: String, dateMax: String) = Action.async {
-    var flickrUrl = flickrPhotoInfoUrl format(lat1, long1, lat2, long2)
-    if (dateMin != null && dateMin.length > 0 && dateMax != null && dateMax.length > 0) {
-      flickrUrl = flickrUrl + s"&min_taken_date=%s&max_taken_date=%s".format(dateMin, dateMax);
+  def poiService(lat: String, lon: String, radius: String, minDate: String, maxDate: String) = Action.async {
+    var flickrUrl = flickrPhotoInfoUrl format(lat, lon, radius)
+    if (minDate != null && minDate.length > 0 && maxDate != null && maxDate.length > 0) {
+      flickrUrl = flickrUrl + s"&min_taken_date=%s&max_taken_date=%s".format(minDate, maxDate);
     }
     Logger.debug(s"flickr url: $flickrUrl")
     WS.url(flickrUrl).get().map { response =>
@@ -58,7 +64,10 @@ class Application extends Controller {
       val flickrJsonPhotos = (response.json \ "photos" \ "photo").as[JsArray].value
       Logger.debug("flickr json: " + flickrJsonPhotos)
       val flickrPhotos = flickrJsonPhotos.map(flickrJsonPhoto => flickrJsonPhoto.as[FlickrPhoto])
-      val ownPhotos = flickrPhotos.map(flickrPhoto => poiWrites.writes(PointOfInterest(flickrPhoto.photoUrl(), flickrPhoto.latitude, flickrPhoto.longitude, flickrPhoto.title)))
+      val ownPhotos = flickrPhotos.map(flickrPhoto
+      => poiWrites.writes(PointOfInterest(flickrPhoto.photoUrl("t"),
+          flickrPhoto.pageUrl(),
+          flickrPhoto.latitude, flickrPhoto.longitude, flickrPhoto.title)))
       Ok(JsArray(ownPhotos))
     }
   }
